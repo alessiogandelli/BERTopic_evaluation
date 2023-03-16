@@ -1,0 +1,72 @@
+[
+    {
+        "Dataset": "climate",
+        "Dataset Size": 1669,
+        "Model": "NMF",
+        "Params": {
+            "num_topics": 10,
+            "random_state": 42
+        },
+        "Scores": {
+            "npmi": -0.0309767664156465,
+            "diversity": 0.5
+        },
+        "Computation Time": 3.1737520694732666
+    },
+    {
+        "Dataset": "climate",
+        "Dataset Size": 1669,
+        "Model": "NMF",
+        "Params": {
+            "num_topics": 20,
+            "random_state": 42
+        },
+        "Scores": {
+            "npmi": -0.07403645270712103,
+            "diversity": 0.405
+        },
+        "Computation Time": 3.326436996459961
+    },
+    {
+        "Dataset": "climate",
+        "Dataset Size": 1669,
+        "Model": "NMF",
+        "Params": {
+            "num_topics": 30,
+            "random_state": 42
+        },
+        "Scores": {
+            "npmi": -0.06447445313296334,
+            "diversity": 0.39
+        },
+        "Computation Time": 4.143438816070557
+    },
+    {
+        "Dataset": "climate",
+        "Dataset Size": 1669,
+        "Model": "NMF",
+        "Params": {
+            "num_topics": 40,
+            "random_state": 42
+        },
+        "Scores": {
+            "npmi": -0.055027317482541485,
+            "diversity": 0.415
+        },
+        "Computation Time": 5.015392065048218
+    },
+    {
+        "Dataset": "climate",
+        "Dataset Size": 1669,
+        "Model": "NMF",
+        "Params": {
+            "num_topics": 50,
+            "random_state": 42
+        },
+        "Scores": {
+            "npmi": -0.06521831805369326,
+            "diversity": 0.386
+        },
+        "Computation Time": 6.229901075363159
+    }
+]
