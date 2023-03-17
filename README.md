@@ -35,6 +35,13 @@ TODO: add the other datasets
 ## Results
 you can see the results in [this](https://github.com/alessiogandelli/BERTopic_evaluation/tree/main/myresults) folder
 
+## Methods 
+for each model we fitted the model with different parameters, in particular
+- number of topics: from 10 to 50 with a step of 5 
+
+all these test have been computed 3 times and then averaged
+
+
 ## Next steps
 Note that these evaluation metrics tells just a part of the story.
 In order to better evaluate these models we need to investigate more in a supervised way:
