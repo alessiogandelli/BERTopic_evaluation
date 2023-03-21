@@ -49,3 +49,12 @@ In order to better evaluate these models we need to investigate more in a superv
 we have to define a test dataset already labeled: 
 First, we will use a general tweets dataset with several different topics( e.g. politics, sports, technology ) in order to see how it perform on simple tasks. 
 Then, we will take a topic( or more) with several subtopics, to see how it perform in this context .
+
+
+### generate supervised dataset
+
+twarc2 search --limit 200 "#stormydaniels -is:retweet lang:en " trump.jsonl
+twarc2 search --limit 200 "#Bitcoin -is:retweet lang:en" btc.jsonl  
+twarc2 search --limit 200 "#socialscience -is:retweet lang:en" socialscience.jsonl
+twarc2 search --limit 200 "#UkraineRussianWar -is:retweet lang:en" war.jsonl
+twarc2 search --limit 200 "#SaudiArabianGP -is:retweet lang:en" formula1.jsonl 
