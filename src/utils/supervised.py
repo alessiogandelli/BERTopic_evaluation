@@ -1,24 +1,36 @@
 #%%
-# read jsonl from file
-import jsonlines
-from bertopic import BERTopic
+# basic imports
+import numpy as np
 import pandas as pd
-from sentence_transformers import SentenceTransformer
-import os 
+import seaborn as sns
+import re
+import string
+import jsonlines
 from dotenv import load_dotenv
-import openai
+import os 
+# bertopic
+from bertopic import BERTopic
 from bertopic.representation import OpenAI
-from umap import UMAP
-from sklearn.feature_extraction.text import CountVectorizer
 from bertopic.vectorizers import ClassTfidfTransformer
 from bertopic.representation import KeyBERTInspired
 from bertopic.backend import BaseEmbedder
+
+from sentence_transformers import SentenceTransformer
+import openai
 from hdbscan import HDBSCAN
-import cohere
-from bertopic.representation import Cohere
-import numpy as np
+from umap import UMAP
+
+
+# preprocessing 
 import nltk
-import seaborn as sns
+from nltk.corpus import stopwords
+from nltk import word_tokenize, pos_tag
+from nltk.stem import WordNetLemmatizer
+import contractions
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.decomposition import NMF
+from sklearn.feature_extraction import text
 
 load_dotenv()
 
@@ -137,7 +149,7 @@ class Supervised:
         return model
 
     def get_NMF(self):
-        self.df['preprocessed'] = df['text'].apply(preprocess_text)
+        self.df['preprocessed'] = self.df['text'].apply(preprocess_text)
         tfidf = TfidfVectorizer(stop_words='english', max_df=0.95, min_df=3, ngram_range=(1,2))
         dtm = tfidf.fit_transform(self.df['preprocessed'])
 
@@ -163,7 +175,9 @@ class Supervised:
         # every my_topic should have >90 % pf the documents of topic
         for topic in my_topics:
             res = df[df['my_topics'] == topic].value_counts('topic') 
-            topic_share[topic] = round(res[0]/ sum(res) ,2)
+            if topic != -1:
+                topic_share[topic] = round(res[0]/ sum(res) ,2)
+                
 
         # compute accuracy for each topic
         if (min(topic_share.values()) < 0.85):
