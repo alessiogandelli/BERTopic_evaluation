@@ -19,7 +19,9 @@ from sentence_transformers import SentenceTransformer
 import openai
 from hdbscan import HDBSCAN
 from umap import UMAP
+import tensorflow_hub
 
+from gsdmm import MovieGroupProcess
 
 # preprocessing 
 import nltk
@@ -71,6 +73,7 @@ def get_test_dataset(path: str):
 
     return df
 
+# this is required for traditional methods 
 def preprocess_text(text):
 
     text = re.sub(r'http\S+', '', text) # remove urls
@@ -117,16 +120,24 @@ class Supervised:
             embs = openai.Embedding.create(input = self.docs, model="text-embedding-ada-002")['data']
             self.embeddings = np.array([np.array(emb['embedding']) for emb in embs])
             self.get_topic_model()            # create model
-            self.get_accuracy()
+           
         
         elif(self.name == 'NMF'):
             self.get_NMF()
+        
+        elif(self.name == 'GSDMM'):
+            self.get_GSDMM()
+
+        elif(self.name == 'USE'):
+            embedding_model = tensorflow_hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
+            self.embedder = embedding_model
+            self.get_topic_model() 
 
         else:
             self.embedder = SentenceTransformer(self.name)
             self.embeddings = self.embedder.encode(self.docs)
             self.get_topic_model()            # create model
-            self.get_accuracy()
+            
 
     # create topic model with bertopic and update the dataframe with the inferred topics 
     def get_topic_model(self):
@@ -148,9 +159,11 @@ class Supervised:
 
         return model
 
-    def get_NMF(self):
+    def get_NMF(self, max_df = 0.95, min_df = 3, ngram_range = (1,2)):
+ 
+
         self.df['preprocessed'] = self.df['text'].apply(preprocess_text)
-        tfidf = TfidfVectorizer(stop_words='english', max_df=0.95, min_df=3, ngram_range=(1,2))
+        tfidf = TfidfVectorizer(stop_words='english', max_df = max_df, min_df = min_df, ngram_range = ngram_range)
         dtm = tfidf.fit_transform(self.df['preprocessed'])
 
 
@@ -163,6 +176,26 @@ class Supervised:
         self.model = nmf_model
         self.df['my_topics'] = topics.argmax(axis=1)
 
+    def get_GSDMM(self, alpha = 0.1, beta = 0.1, n_iters = 30):
+
+        if self.nr_topics == 'auto':
+            self.nr_topics = len(self.df['topic'].unique())
+
+        mgp = MovieGroupProcess(K= self.nr_topics, alpha= alpha, beta=beta, n_iters=n_iters)
+        lemmatizer = nltk.WordNetLemmatizer()
+        vectorizer = TfidfVectorizer()
+
+        self.df['tokens'] = self.df['text'].apply(lambda x: ' '.join([word for word in x.split() if word not in (stopwords.words('english'))]))
+        self.df['tokens'] = self.df['tokens'].apply(lambda x: nltk.word_tokenize(x))
+        self.df['tokens'] = self.df['tokens'].apply(lambda x: [lemmatizer.lemmatize(word) for word in x])
+        docs = self.df['tokens'].tolist()
+        vocab = set(x for doc in docs for x in doc)
+        n_terms = len(vocab)
+        y = mgp.fit(docs, n_terms)
+
+        self.model = mgp
+        self.df['my_topics'] = y
+
 
     def get_accuracy(self):
         df = self.df
@@ -172,7 +205,7 @@ class Supervised:
         results_no_outliers = {}
         topic_share = {}
 
-        # every my_topic should have >90 % pf the documents of topic
+        # every my_topic should have >77 % pf the documents of topic
         for topic in my_topics:
             res = df[df['my_topics'] == topic].value_counts('topic') 
             if topic != -1:
@@ -180,7 +213,7 @@ class Supervised:
                 
 
         # compute accuracy for each topic
-        if (min(topic_share.values()) < 0.85):
+        if (min(topic_share.values()) < 0.75):
             print('topic share is too low, proprablt accuracy is not meaningful for ', min(topic_share))
             print('check the heatmap ')
         results['min_topic_share'] = min(topic_share.values())
