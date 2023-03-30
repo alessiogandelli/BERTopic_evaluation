@@ -1,6 +1,8 @@
 # Evaluate topic modeling
 
-in this repository, we evaluate the the following topic modeling methods, using the [OCTIS](https://github.com/MIND-Lab/OCTIS) library and starting from the work of @MaartenGr :
+in this repository, we evaluate the the following topic modeling methods, using both a Supervised and Unsupervised methods
+
+
 
 - [LDA](https://www.jmlr.org/papers/volume3/blei03a/blei03a.pdf)
 - [NMF](https://papers.nips.cc/paper/1861-algorithms-for-non-negative-matrix-factorization)
@@ -10,11 +12,13 @@ in this repository, we evaluate the the following topic modeling methods, using 
 for the bertopic model, I used different sentence-transformer for computing the embeddings:
 
 - [all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
-- [openai embeddings](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings])
+- [openai embeddings](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings)
 - [Universal Sentence Encoder](https://tfhub.dev/google/universal-sentence-encoder/4)
 - [ClimateBert](https://huggingface.co/climatebert/distilroberta-base-climate-f)
 - [tweetclassification](https://huggingface.co/louisbetsch/tweetclassification-bf-model)
-  
+
+
+[OCTIS](https://github.com/MIND-Lab/OCTIS) library and starting from the work of @MaartenGr :
 
 ## Metrics 
 for each of these models, we compute the following metrics:
@@ -53,8 +57,18 @@ Then, we will take a topic( or more) with several subtopics, to see how it perfo
 
 ### generate supervised dataset
 
+#### simple supervised 
+
 twarc2 search --limit 200 "#stormydaniels -is:retweet lang:en " trump.jsonl
 twarc2 search --limit 200 "#Bitcoin -is:retweet lang:en" btc.jsonl  
 twarc2 search --limit 200 "#socialscience -is:retweet lang:en" socialscience.jsonl
 twarc2 search --limit 200 "#UkraineRussianWar -is:retweet lang:en" war.jsonl
 twarc2 search --limit 200 "#SaudiArabianGP -is:retweet lang:en" formula1.jsonl 
+
+#### politics supervised
+twarc2 search --limit 200 "#IndictArrestAndConvictTrump -is:retweet lang:en" trump.jsonl    
+twarc2 search --limit 200 "#kabul -is:retweet lang:en" kabul.jsonl   
+twarc2 search --limit 200 "#BidenHarris2024 -is:retweet lang:en" biden_harris2024.jsonl  
+twarc2 search --limit 200 "#belarus -is:retweet lang:en" belarus.jsonl   
+twarc2 search --limit 200 "#taiwan -is:retweet lang:en" taiwan.jsonl     
+twarc2 search --limit 200 "#KamalaHarris -is:retweet lang:en" kamala.jsonl   

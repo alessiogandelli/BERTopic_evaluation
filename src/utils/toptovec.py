@@ -100,3 +100,20 @@ import seaborn as sns
 sns.heatmap(pd.crosstab(df['topic'], df['my_topic']), annot=True, fmt="d", cmap="YlGnBu")
 
 # %%
+from dotenv import load_dotenv
+import os 
+import openai
+
+load_dotenv()
+
+
+openai.api_key = os.getenv("OPENAI_API_KEY")    
+
+#%%
+response = openai.Image.create(
+  prompt="instagram post for describing a todolist ",
+  n=1,
+  size="1024x1024"
+)
+response['data'][0]['url']
+# %%

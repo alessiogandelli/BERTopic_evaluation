@@ -94,19 +94,20 @@ def preprocess_text(text):
 
 class Supervised:
 
-    def __init__(self, dataset, name, nr_topics = 'auto', min_topic_size = 50):
+    def __init__(self, dataset, name, nr_topics = 'auto', min_topic_size = 50, n_iter=1):
         self.df = dataset.copy()
         self.docs = self.df['text'].tolist()
         self.nr_topics = nr_topics
         self.min_topic_size = min_topic_size
+        self.n_iter = n_iter
 
         self.embeddings = None
         self.embedder = None
         self.model = None
-        self.accuracy = None                 # accracy result
-        self.accuracy_no_outliers = None     # accuracy without outliers 
+        self.accuracy = [{}]                 # accracy result
+        self.accuracy_no_outliers = []     # accuracy without outliers 
         self.name = name
-        self.topic_share = None
+        self.topic_share = []
 
         self.evaluate()             # create embeddings 
         self.get_accuracy()                 # get accuracy
@@ -115,32 +116,52 @@ class Supervised:
     # else only sentence tranformer are allowed
     def evaluate(self):
         print('evaluate', self.name)
+        model = ''
+
 
         if(self.name == 'openai'):
             embs = openai.Embedding.create(input = self.docs, model="text-embedding-ada-002")['data']
             self.embeddings = np.array([np.array(emb['embedding']) for emb in embs])
-            self.get_topic_model()            # create model
+            model = 'bertopic'           # create model
            
         
         elif(self.name == 'NMF'):
-            self.get_NMF()
+            #self.get_NMF()
+            model = 'nmf'
         
         elif(self.name == 'GSDMM'):
-            self.get_GSDMM()
+            #self.get_GSDMM()
+            model = 'gsdmm'
 
         elif(self.name == 'USE'):
             embedding_model = tensorflow_hub.load("https://tfhub.dev/google/universal-sentence-encoder/4")
             self.embedder = embedding_model
             self.get_topic_model() 
+            model = 'bertopic'           # create model
 
         else:
             self.embedder = SentenceTransformer(self.name)
             self.embeddings = self.embedder.encode(self.docs)
-            self.get_topic_model()            # create model
+            model = 'bertopic'           # create model
+            #self.get_topic_model()            # create model
+
+        
+        for i in range(self.n_iter):
+            if model == 'bertopic':
+                self.get_topic_model(i)            # create model
+                #self.get_accuracy()                 # get accuracy
+
+            elif model == 'nmf':
+                self.get_NMF(i)
+                #self.get_accuracy()                 # get accuracy
+
+            elif model == 'gsdmm':
+                self.get_GSDMM(i)
+                #self.get_accuracy()                 # get accuracy
             
 
     # create topic model with bertopic and update the dataframe with the inferred topics 
-    def get_topic_model(self):
+    def get_topic_model(self, n ):
 
         vectorizer_model = CountVectorizer(stop_words="english")
         ctfidf_model = ClassTfidfTransformer(reduce_frequent_words=True)
@@ -154,8 +175,8 @@ class Supervised:
         topics ,probs = model.fit_transform(self.docs, embeddings = self.embeddings)
 
         self.model = model
-        self.df['my_topics'] = topics
-        self.df['my_probs'] = probs
+        self.df['my_topics_'+str(n)] = topics
+        #self.df['my_probs'] = probs
 
         return model
 
@@ -194,48 +215,54 @@ class Supervised:
         y = mgp.fit(docs, n_terms)
 
         self.model = mgp
-        self.df['my_topics'] = y
+        self.df['my_topics_'+str(n)] = y
 
 
     def get_accuracy(self):
         df = self.df
-        topics = df['topic'].unique()
-        my_topics = df['my_topics'].unique()
-        results = {}
-        results_no_outliers = {}
-        topic_share = {}
 
-        # every my_topic should have >77 % pf the documents of topic
-        for topic in my_topics:
-            res = df[df['my_topics'] == topic].value_counts('topic') 
-            if topic != -1:
-                topic_share[topic] = round(res[0]/ sum(res) ,2)
+
+        for i in range(self.n_iter):
+
+            topics = df['topic'].unique()
+            my_topics = df['my_topics_'+str(i)].unique()
+            results = {}
+            results_no_outliers = {}
+            topic_share = {}
+            # every my_topic should have >77 % pf the documents of topic
+            for topic in my_topics:
+                res = df[df['my_topics_'+str(i)] == topic].value_counts('topic') 
+                if topic != -1:
+                    topic_share[topic] = round(res[0]/ sum(res) ,2)
+                    
+
+            # compute accuracy for each topic
+            if (min(topic_share.values()) < 0.7):
+                print('topic share is too low, proprablt accuracy is not meaningful for ', min(topic_share))
+                print('check the heatmap ')
+            results['min_topic_share'] = min(topic_share.values())
+
+            for topic in topics:
+                res = df[df['topic'] == topic].value_counts('my_topics_'+str(i))
+                first = res.iloc[0] if res.index[0] != -1 else res.iloc[1]                       # i'm assuming that out of the possible label the right one is the biggest 
+                missed = sum(res.iloc[1:]) if res.index[0] != -1 else sum(res) - res.iloc[1]    # sum of the other labels
+                try :
+                    outliers = res.loc[-1]
+                except:
+                    outliers = 0
+
                 
-
-        # compute accuracy for each topic
-        if (min(topic_share.values()) < 0.75):
-            print('topic share is too low, proprablt accuracy is not meaningful for ', min(topic_share))
-            print('check the heatmap ')
-        results['min_topic_share'] = min(topic_share.values())
-
-        for topic in topics:
-            res = df[df['topic'] == topic].value_counts('my_topics') 
-            first = res.iloc[0] if res.index[0] != -1 else res.iloc[1]                       # i'm assuming that out of the possible label the right one is the biggest 
-            missed = sum(res.iloc[1:]) if res.index[0] != -1 else sum(res) - res.iloc[1]    # sum of the other labels
-            try :
-                outliers = res.loc[-1]
-            except:
-                outliers = 0
-
+                
+                results[topic] = first / (first + missed)
+                results_no_outliers[topic] = first / (first + missed - outliers)  # bertopic mark the outliers with -1, i do not consider them while computing accuracy
             
             
-            results[topic] = first / (first + missed)
-            results_no_outliers[topic] = first / (first + missed - outliers)  # bertopic mark the outliers with -1, i do not consider them while computing accuracy
-        
-        
-        self.accuracy = results
-        self.accuracy_no_outliers = results_no_outliers
-        self.topic_share = topic_share
+            self.accuracy.append({
+                'accuracy': results,
+                'accuracy_no_outliers': results_no_outliers,
+                'topic_share': topic_share
+            }) 
+            
 
         return results
     
