@@ -2,6 +2,7 @@
 # basic imports
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 import seaborn as sns
 import re
 import string
@@ -104,7 +105,7 @@ class Supervised:
         self.embeddings = None
         self.embedder = None
         self.model = None
-        self.accuracy = [{}]                 # accracy result
+        self.accuracy = []                 # accracy result
         self.accuracy_no_outliers = []     # accuracy without outliers 
         self.name = name
         self.topic_share = []
@@ -152,11 +153,11 @@ class Supervised:
                 #self.get_accuracy()                 # get accuracy
 
             elif model == 'nmf':
-                self.get_NMF(i)
+                self.get_NMF(n = i)
                 #self.get_accuracy()                 # get accuracy
 
             elif model == 'gsdmm':
-                self.get_GSDMM(i)
+                self.get_GSDMM(n = i)
                 #self.get_accuracy()                 # get accuracy
             
 
@@ -180,7 +181,7 @@ class Supervised:
 
         return model
 
-    def get_NMF(self, max_df = 0.95, min_df = 3, ngram_range = (1,2)):
+    def get_NMF(self, n,  max_df = 0.95, min_df = 3, ngram_range = (1,2)  ):
  
 
         self.df['preprocessed'] = self.df['text'].apply(preprocess_text)
@@ -195,9 +196,9 @@ class Supervised:
 
 
         self.model = nmf_model
-        self.df['my_topics'] = topics.argmax(axis=1)
+        self.df['my_topics_'+str(n)] = topics.argmax(axis=1)
 
-    def get_GSDMM(self, alpha = 0.1, beta = 0.1, n_iters = 30):
+    def get_GSDMM(self,n = 0, alpha = 0.1, beta = 0.1, n_iters = 30):
 
         if self.nr_topics == 'auto':
             self.nr_topics = len(self.df['topic'].unique())
@@ -270,8 +271,31 @@ class Supervised:
         reduced_embeddings = UMAP(n_neighbors=10, n_components=2, min_dist=0.0, metric='cosine').fit_transform(self.embeddings)
         return self.model.visualize_documents(self.docs, reduced_embeddings=reduced_embeddings)
 
-    def visualize_heatmap(self):
-        return sns.heatmap(pd.crosstab(self.df['topic'], self.df['my_topics']), annot=True, cmap="YlGnBu", fmt='g')
+    def visualize_heatmap(self, n=0):
+        return sns.heatmap(pd.crosstab(self.df['topic'], self.df['my_topics_'+str(n)]), annot=True, cmap="YlGnBu", fmt='g').set_title(self.name)
+    
+    def visualize_min_topic_share(self):
+
+        # create a figure and axis
+        min_topic_size = [acc['accuracy']['min_topic_share'] for acc in self.accuracy]
+
+        fig, ax = plt.subplots()
+        #bar plot
+        ax.bar(range(len(min_topic_size)), min_topic_size) 
+
+        ax.set_xlabel('iteration')
+        ax.set_ylabel('min topic share')
+        ax.set_title( self.name)
+
+        # y lim 0-1 
+        ax.set_ylim(0,1)
+
+        # x ticks
+        ax.set_xticks(range(len(min_topic_size)))
+
+        
+
+
 
 class CustomEmbedder(BaseEmbedder):
     def __init__(self, embedding_model):
@@ -289,3 +313,4 @@ class CustomEmbedder(BaseEmbedder):
 
 
 # %%
+# find differences between columns 

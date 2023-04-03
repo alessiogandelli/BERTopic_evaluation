@@ -77,3 +77,4 @@ venv.bak/
 .idea/
 
 /data
+myresults/plots/supervised/models.pkl
