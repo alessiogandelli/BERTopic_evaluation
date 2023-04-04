@@ -9,7 +9,7 @@ def get_topics_label(model):
 
     for topic in topics:
         tweets = model.get_representative_docs(topic)
-        prompt = "you are a tweet labeler, you are given representative words from a topic and three representative tweets, given all these information give a short label for the topic, starts all with topic:."
+        prompt = "you are a tweet labeler, you are given representative words from a topic and three representative tweets, give more weight to the words, given all these information give a short label for the topic (max 10 words), starts all with topic:."
         words = [word[0] for word in topic_words[topic]]
 
 
@@ -41,5 +41,13 @@ df_label = pd.DataFrame.from_dict(labels_bert_simple, orient='index', columns=['
 df_label['openai_simple'] = pd.DataFrame.from_dict(label_openai_simple, orient='index', columns=['openai_simple'])
 df_label['bert_simple_nohash'] = pd.DataFrame.from_dict(labels_bert_simple_nohash, orient='index', columns=['bert_simple_nohash'])
 df_label['openai_simple_nohash'] = pd.DataFrame.from_dict(label_openai_simple_nohash, orient='index', columns=['openai_simple_nohash'])
+
+# %%
+
+# pol dataset 
+labels_bert_pol = get_topics_label(bert_pol.model)
+labels_openai_pol = get_topics_label(openai_pol.model)
+labels_bert_pol_nohash = get_topics_label(bert_pol_no_hash.model)
+labels_openai_pol_nohash = get_topics_label(openai_eval_pol_no_hash.model)
 
 # %%

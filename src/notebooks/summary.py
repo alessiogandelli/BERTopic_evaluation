@@ -220,3 +220,47 @@ with open('models.pkl', 'wb') as f:
 with open('models.pkl', 'rb') as f:
     modelli = pickle.load(f)
 # %%
+
+models = {'bert': bert_pol.accuracy[0],
+          'openai': openai_pol.accuracy[0],
+          'nmf': nmf_pol.accuracy[0]['accuracy']}
+
+df = pd.DataFrame()
+df['bert'] = bert_pol.accuracy[0]['accuracy']
+df['openai'] = openai_pol.accuracy[0]['accuracy']
+df['nmf'] = nmf_pol.accuracy[0]['accuracy']
+
+df_share = pd.DataFrame()
+
+df_share['bert_topic_share'] = bert_pol.accuracy[0]['topic_share']
+df_share['openai_topic_share'] = openai_pol.accuracy[0]['topic_share']
+df_share['nmf_topic_share'] = nmf_pol.accuracy[0]['topic_share']
+
+fig = df_share.T.plot.bar()
+
+
+fig.set_ylabel('Accuracy')
+fig.set_title('Accuracy different models')
+
+fig.set_ylim(0,1)
+
+fig.set_xticklabels(['bert', 'openai', 'nmf'])
+
+# yticks
+fig.set_yticks(np.arange(0, 1.1, 0.1))
+
+#grid evrey 0,1
+fig.grid(axis='y', alpha=0.5)
+
+#rotate xticks
+fig.set_xticklabels(fig.get_xticklabels(), rotation=0)
+
+
+
+
+#add yticks every 0.1
+#plt.yticks(np.arange(0, 1.1, 0.1))
+# legend outside 
+fig.legend(bbox_to_anchor=(1.05, 1), loc='upper left', borderaxespad=0.)
+
+# %%
