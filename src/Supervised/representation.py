@@ -1,10 +1,18 @@
 #%%
 import openai
+from dotenv import load_dotenv
+import os
+import pandas as pd
+import numpy as np
 
+load_dotenv()
+openai.api_key = os.getenv("OPENAI_API_KEY")
+
+# given a bert model return a dictionary with topic as key and label as value
 def get_topics_label(model):
 
-    topics = list(model.get_topic_info()['Topic'])
-    topic_words = model.get_topics()
+    topics = list(model.get_topic_info()['Topic']) # get inferred topics 
+    topic_words = model.get_topics() # get words for each topic
     labels = {}
 
     for topic in topics:
@@ -16,7 +24,7 @@ def get_topics_label(model):
         topic_label = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[
-                    {"role": "system", "content":prompt},
+                    {"role": "system", "content": prompt},
                     {"role": "user", "content": 'words'+ str(words)},
                     {"role": "user", "content": 'tweet'+ tweets[0]},
                     {"role": "user", "content": 'tweet'+tweets[1]},
