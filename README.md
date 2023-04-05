@@ -1,8 +1,7 @@
 # Evaluate topic modeling
+[presentation](https://docs.google.com/presentation/d/1mujMJvgsh6InJW2cF6Mef4cKrJcSXA6lLysWpDhZ17Y/edit?usp=sharing)
 
 in this repository, we evaluate the the following topic modeling methods, using both a Supervised and Unsupervised methods
-
-[presentation](https://docs.google.com/presentation/d/1mujMJvgsh6InJW2cF6Mef4cKrJcSXA6lLysWpDhZ17Y/edit?usp=sharing)
 
 
 
